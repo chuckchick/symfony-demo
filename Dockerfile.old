@@ -1,0 +1,35 @@
+FROM debian:10-slim
+
+RUN apt-get update && \
+  apt-get install -y \
+  php \
+  php-ctype \
+  php-iconv \
+  php-json \
+  php-simplexml \ 
+  php-tokenizer \ 
+  php-pdo-pgsql \
+  php-mbstring \
+  zip \
+  unzip \
+  apache2 \
+  curl && \
+  apt-get clean
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+COPY apache2-foreground /usr/local/bin
+RUN chmod a+x /usr/local/bin/apache2-foreground
+COPY vhost.conf /etc/apache2/sites-available/000-default.conf
+
+COPY . /app
+RUN chown -R www-data:www-data /app
+
+RUN echo "error_log /dev/stderr" >> /etc/php//7.3/apache2/conf.d/00-log.ini
+
+EXPOSE 80
+
+STOPSIGNAL SIGWINCH
+
+CMD ["/usr/local/bin/apache2-foreground"]
+
